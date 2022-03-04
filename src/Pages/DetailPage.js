@@ -15,7 +15,7 @@ export default function Detail() {
   const [showInfo, setShowInfo] = useState('info');
 
   useEffect(() => {
-    RequestAPI(`${APIS.GETNAMES}/${mid}`, 'GET', {}, true)
+    RequestAPI(`${APIS.HOST}api/member/${mid}`, 'GET', {}, true)
       .then((response) => {
         if (response.status === 200 && response.data.length) {
           setData(response.data[0]);

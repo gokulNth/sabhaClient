@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { caculateAge, canNavigate, GenericWords, RequestAPI } from '../Utils/Constant';
+import { caculateAge, canNavigate, GenericWords, RequestAPI, APIS } from '../Utils/Constant';
 import { TextBox } from './UtilComp';
 
 function ElectionTableHead(props) {
@@ -104,7 +104,7 @@ function ElectionBody(props) {
     mid &&
       mode &&
       RequestAPI(
-        `http://localhost:3001/api/update/vote/${mid}`,
+        `${APIS.HOST}api/update/vote/${mid}`,
         'POST',
         { mode, voted },
         true

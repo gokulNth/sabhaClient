@@ -1,5 +1,6 @@
+import md5 from 'md5';
 import React, { useState } from 'react';
-import { Icons, RequestAPI } from '../Utils/Constant';
+import { APIS, Icons, RequestAPI, secretKey } from '../Utils/Constant';
 
 function LoginForm(props) {
     const [userName, setUserName] = useState('');
@@ -22,19 +23,23 @@ function LoginForm(props) {
     const handleSubmit = () => {
         if (password.length >= 8) {
             setShowHint(false);
-            RequestAPI('http://localhost:3001/api/login', 'POST', {
+            RequestAPI(`${APIS.HOST}api/login`, 'POST', {
                 userName: userName.trim(),
                 password: password.trim()
             }).then((response) => {
                 if (response.status === 200) {
-                    const data = JSON.stringify({ ...response.data, id: userName });
-                    rememberMe
-                        ? window.localStorage.setItem('login', data)
-                        : window.sessionStorage.setItem('login', data)
+                    const { member_name, profile, id } = JSON.parse(response.statusText)
+                    if (rememberMe) {
+                        window.localStorage.setItem('auth', md5(`${profile}_${id}_${secretKey}`));
+                        window.localStorage.setItem('login', JSON.stringify({ member_name, id, profile }));
+                    } else {
+                        window.sessionStorage.setItem('auth', md5(`${profile}_${id}_${secretKey}`));
+                        window.sessionStorage.setItem('login', JSON.stringify({ member_name, id, profile }));
+                    }
                     window.location.href = '/';
                 }
             }).catch((error) => {
-                console.log(error);
+                console.log(error)
                 props.showToastFn({ toastMessage: 'MemberId or Password is incorrect....' }, 'error');
             })
         } else {
@@ -53,7 +58,7 @@ function LoginForm(props) {
                             <label className="form-label text-primary" htmlFor="input-example-1">Member ID</label>
                         </div>
                         <div className="col-9 col-sm-12">
-                            <input className="form-input" type="number" id="input-example-1" value={userName} onChange={handleInputChange.bind(this, 'usr')} placeholder="Member ID" />
+                            <input className="form-input" type="text" id="input-example-1" value={userName} onChange={handleInputChange.bind(this, 'usr')} placeholder="Member ID" />
                         </div>
                     </div>
                     <div className="form-group has-success">

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { RequestAPI } from '../Utils/Constant';
+import { APIS, RequestAPI } from '../Utils/Constant';
 
 function ChildInfo(props) {
   const { child: data } = props;
@@ -78,7 +78,7 @@ export default function ChildrenList(props) {
   useEffect(() => {
     (props.data || []).forEach((i) => {
       if (i.id) {
-        RequestAPI(`http://localhost:3001/api/child/${i.id}`, 'GET', {}, true).then(
+        RequestAPI(`${APIS.HOST}api/child/${i.id}`, 'GET', {}, true).then(
           (response) => {
             if (response.status === 200) {
               setData((data) => [...data, ...response.data]);

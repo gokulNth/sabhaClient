@@ -18,9 +18,10 @@ class Home extends React.Component {
       },
       isSearch: false,
       isNext: true,
-      limit: 20,
+      limit: 0,
       isLogin: false,
     };
+    this.dataLimit = 40;
     this.handleChange = this.handleChange.bind(this);
     this.getData = this.getData.bind(this);
     this.handleSearch = debounce(this.handleSearch.bind(this), 300);
@@ -28,7 +29,7 @@ class Home extends React.Component {
   }
 
   componentDidMount() {
-    this.getData(`${APIS.GETNAMES}?limit=${20}`);
+    this.handleSearch(false);
     document.addEventListener('scroll', debounce(this.handleScroll.bind(this), 200))
     const login = JSON.parse(window.localStorage.getItem('login') || window.sessionStorage.getItem('login')) || null;
     if (login) {
@@ -37,21 +38,20 @@ class Home extends React.Component {
   }
 
   handleScroll() {
-    const { limit, isNext } = this.state;
-    if (isNext && window.innerHeight + document.documentElement.scrollTop > document.documentElement.offsetHeight / (3 / 2)) {
-      this.setState({ limit: limit + 20 });
-      this.getData(`${APIS.GETNAMES}?limit=${limit + 20}`)
+    const { isNext } = this.state;
+    if (isNext && window.innerHeight + document.documentElement.scrollTop > document.documentElement.offsetHeight / (1.5)) {
+      this.handleSearch(false);
     }
   }
-  getData(url) {
-    const { limit } = this.state;
-    RequestAPI(url, 'GET')
+  getData(url, toAdd) {
+    const { data } = this.state;
+    RequestAPI(url, 'GET', {}, true)
       .then((i) => {
         if (i.status === 200) {
-          if (i.data.length !== limit) {
-            this.setState({ isNext: false });
-          }
-          this.setState({ data: i.data });
+          this.setState({
+            data: toAdd ? i.data : [...data, ...i.data],
+            isNext: i.data.length === this.dataLimit
+          });
         }
       })
       .catch((e) => {
@@ -67,22 +67,29 @@ class Home extends React.Component {
     const { values } = this.state;
     const setValue = { [id]: value };
     this.setState({ values: { ...values, ...setValue } });
-    this.handleSearch({ ...values, ...setValue });
+    this.handleSearch();
   }
 
   handleLogout() {
     if (window.localStorage.getItem('login')) {
       window.localStorage.removeItem('login');
-    } else {
+      window.localStorage.removeItem('auth');
+    }
+    if (window.sessionStorage.getItem('login')) {
       window.sessionStorage.removeItem('login');
+      window.sessionStorage.removeItem('auth');
     }
     this.setState({ isLogin: false });
   }
 
-  handleSearch(values) {
+  handleSearch(toAdd = true) {
+    const { limit, values } = this.state;
     let queryParams = constructQuery(values);
-    this.setState({ isSearch: !!queryParams.length });
-    this.getData(`${APIS.GETNAMES}?word=${queryParams}`);
+    this.setState({
+      isSearch: !!queryParams.length,
+      limit: toAdd ? 0 : limit + this.dataLimit
+    });
+    this.getData(`${APIS.HOST}api/member?limit=${toAdd ? 0 : limit},${this.dataLimit}${!!queryParams.length ? `&word=${queryParams}` : ''}`, toAdd);
   }
 
   render() {
@@ -103,7 +110,7 @@ class Home extends React.Component {
         ) : (
           <div style={{ overflowX: 'scroll' }}>
             <table className='table table-hover table-striped'>
-              <thead className='bg-dark text-light p-relative'>
+              <thead id='tablehead' className='bg-dark text-light p-relative'>
                 <tr>
                   <th className='text-center' style={{ minWidth: 50 }}>
                     #
@@ -139,6 +146,7 @@ class Home extends React.Component {
                 <Table data={data} />
               </tbody>
             </table>
+            {this.state.isNext ? <LoadingComponent /> : ''}
           </div>
         )}
       </div>

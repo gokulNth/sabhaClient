@@ -10,10 +10,10 @@ function SubHeader(props) {
           <button className='btn btn-link dropdown-toggle' tabIndex='0'>
             <i className='icon icon-more-vert'></i>
           </button>
-          <ul className='menu'>
+          <ul className='menu' style={{ height: 'auto' }}>
             <li>
               {login
-                ? <button type='button' className='btn btn-link' onClick={props.handleLogout}>Logout</button>
+                ? <span className="btn btn-link">HI!&nbsp;&nbsp;{login.member_name}</span>
                 : <Link to='/login' className='btn btn-link'>Login</Link>
               }
             </li>
@@ -21,18 +21,28 @@ function SubHeader(props) {
               {
                 canNavigate('/election') ? <Link to='/election'>
                   <div className='btn btn-link'>Election Portal</div>
-                </Link> : <Link to='/votecount'>
-                  <div className='btn btn-link'>Election Portal</div>
-                </Link>
+                </Link> : <></>
               }
             </li>
+            {login
+              ? <>
+                <div class="divider text-center" data-content="Account"></div>
+                <li className='btn btn-link' onClick={props.handleLogout}>Logout</li>
+                <li className='btn btn-link'>Change Password</li>
+              </>
+              : null
+            }
           </ul>
         </div>
       </section>
       <section className='navbar-section'>
-        <div className='label label-rounded'>
-          Total Members: {props.total_count}
+        <div className='badge bg-dark show-sm hide-md hide-lg m-2 p-2' data-badge={props.total_count}>
+          <span className='m-2'>448</span>
         </div>
+        <div className='badge hide-sm bg-dark m-2 p-2' data-badge={props.total_count}>
+          <span className='m-2'>Total Members: 448</span>
+        </div>
+        &nbsp;&nbsp;&nbsp;&nbsp;
         {props.isSearch && (
           <a href='/' className='btn btn-success'>
             Reset
@@ -44,13 +54,21 @@ function SubHeader(props) {
       </section>
       <section className='navbar-section hide-sm'>
         {login
-          ? <Link to='/' className='btn btn-link' onClick={props.handleLogout}>Logout</Link>
+          ? <div className="dropdown">
+            <a href="#" className="btn btn-link dropdown-toggle" tabIndex="0">
+              <span className="text-mute text-dark">HI!</span>
+              &nbsp;&nbsp;
+              {login.member_name} <i className="icon icon-caret"></i>
+            </a>
+            <ul className="menu">
+              <li className='btn btn-link' onClick={props.handleLogout}>Logout</li>
+              <li className='btn btn-link'>Change Password</li>
+            </ul>
+          </div>
           : <Link to='/login' className='btn btn-link'>Login</Link>
         }
         {
           canNavigate('/election') ? <Link to='/election'>
-            <div className='btn btn-link'>Election Portal</div>
-          </Link> : canNavigate('/votecount') ? <Link to='/votecount'>
             <div className='btn btn-link'>Election Portal</div>
           </Link> : <></>
         }
@@ -69,6 +87,13 @@ function ElectionSubHeader(props) {
             <i className='icon icon-more-vert'></i>
           </button>
           <ul className='menu'>
+            <li>
+              <Link to='/' className="btn btn-link">
+                <i className='icon icon-x icon-back'></i>
+                &nbsp;&nbsp;
+                Back
+              </Link>
+            </li>
             <li>
               <div className={`btn ${isFiltered ? 'btn-success' : 'btn-link'}`}>
                 <span onClick={handleToggleModal}>Filter</span>
@@ -108,6 +133,11 @@ function ElectionSubHeader(props) {
       </section>
       <section className='navbar-section hide-sm hide-md'>
         <div>
+          <Link to='/' className="btn btn-primary">
+            <i className='icon icon-x icon-back'></i>
+            &nbsp;&nbsp;
+            Back
+          </Link>
           <div className={`btn ${isFiltered ? 'btn-success' : 'btn-link'}`}>
             <span onClick={handleToggleModal}>Filter</span>
             {isFiltered && (

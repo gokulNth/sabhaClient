@@ -1,6 +1,8 @@
 import axios from "axios";
 
-export const APIS = { GETNAMES: 'http://localhost:3001/api/member' };
+export const secretKey = "Science is a way of life. Science is a perspective. Science is the process that takes us from confusion to understanding in a manner that's precise, predictive and reliable - a transformation, for those lucky enough to experience it, that is empowering and emotional."
+
+export const APIS = { HOST: 'http://localhost:3001/' };
 // let child = {
 //   id: "",
 //   member_name: "",
@@ -68,13 +70,11 @@ export function constructQuery(searchQuery) {
 }
 
 export function canNavigate(url) {
-  const loginDetails = JSON.parse(window.localStorage.getItem('login') || window.sessionStorage.getItem('login')) || null;
+  let loginDetails = JSON.parse(window.localStorage.getItem('login') || window.sessionStorage.getItem('login'));
+  if (url.includes('/api/member?')) return true;
   if (loginDetails) {
-    if (url.includes('/votecount') && loginDetails.profile > 0) {
-      return true;
-    }
     if (loginDetails.profile === 1) {
-      if (url.includes(`/${loginDetails.id}`)) return true;
+      if (url.includes(`/${loginDetails.id}`) || url.includes('/api/child/')) return true;
     } else if (loginDetails.profile === 2) {
       if (url.includes('/searchall') || url.includes('/election') || url.includes('/online') || url.includes('/offline')) {
         return false;
@@ -82,7 +82,7 @@ export function canNavigate(url) {
         return true;
       }
     } else if (loginDetails.profile === 3) {
-      if (url.includes(`/${loginDetails.id}`) || url.includes('/searchall') || url.includes('/election') || url.includes('/online') || url.includes('/offline')) {
+      if (url.includes(`/update/vote`) || url.includes('/api/child/') || url.includes(`/${loginDetails.id}`) || url.includes('/searchall') || url.includes('/election') || url.includes('/online') || url.includes('/offline')) {
         return true;
       }
     } else if (loginDetails.profile === 4) {
@@ -92,21 +92,29 @@ export function canNavigate(url) {
   return false;
 }
 
-function callAPI(url, method, queryParams) {
+function callAPI(url, method, queryParams = {}) {
+  let login = window.localStorage.getItem('login') || window.sessionStorage.getItem('login');
+  let auth = window.localStorage.getItem('auth') || window.sessionStorage.getItem('auth')
+  const header = {
+    headers: {
+      Authorization: auth,
+      Details: login ? JSON.parse(login) ? JSON.parse(login).id : "" : ""
+    }
+  }
   return new Promise((resolve) => {
     if (method === 'POST') {
-      axios.post(url, queryParams).then((response) => {
+      axios.post(url, queryParams, header).then((response) => {
         resolve(response);
       })
     } else {
-      axios.get(url).then((response) => {
+      axios.get(url, header).then((response) => {
         resolve(response);
       })
     }
   })
 }
 
-export function RequestAPI(url, method, queryParams, needAuth) {
+export function RequestAPI(url, method, queryParams = {}, needAuth = false) {
   return new Promise((resolve, reject) => {
     if (needAuth) {
       if (canNavigate(url)) {

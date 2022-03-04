@@ -1,5 +1,5 @@
 import React from 'react';
-import { debounce, constructQuery, RequestAPI } from '../Utils/Constant';
+import { debounce, constructQuery, RequestAPI, APIS } from '../Utils/Constant';
 import { ElectionTableData, FilterMenu } from './SmallComp';
 import { SimpleHeader } from './SubHeader';
 import { TextBox, LoadingComponent } from './UtilComp';
@@ -21,6 +21,8 @@ class OnlineVotes extends React.Component {
       asc: false,
       tkn: false,
       isFiltered: false,
+      isNext: true,
+      limit: 0
     };
     this.handleChange = this.handleChange.bind(this);
     this.handleSearchData = debounce(this.handleSearchData.bind(this), 300);
@@ -29,7 +31,14 @@ class OnlineVotes extends React.Component {
     this.handleFilterValue = this.handleFilterValue.bind(this);
   }
   componentDidMount() {
-    this.handleSearchData();
+    document.addEventListener('scroll', debounce(this.handleScroll.bind(this), 200))
+    this.handleSearchData(false);
+  }
+  handleScroll() {
+    const { isNext } = this.state;
+    if (isNext && window.innerHeight + document.documentElement.scrollTop > document.documentElement.offsetHeight / (1.5)) {
+      this.handleSearchData(false);
+    }
   }
   changeVoteCount(num) {
     const { count } = this.state;
@@ -50,15 +59,18 @@ class OnlineVotes extends React.Component {
     this.handleSearchData();
   }
 
-  handleSearchData() {
-    const { vote: Isvote, tkn: Istkn, asc: Isasc, searchQuery } = this.state;
+  handleSearchData(toAdd = true) {
+    const { vote: Isvote, tkn: Istkn, asc: Isasc, searchQuery, limit } = this.state;
     let queryParams = constructQuery(searchQuery);
-    const query = `http://localhost:3001/api/online?word=${Isvote === null ? '' : Isvote ? 1 : 0
+    const query = `${APIS.HOST}api/online?word=${Isvote === null ? '' : Isvote ? 1 : 0
       }%voted${queryParams.length ? `,${queryParams}` : ''}&sort=${Istkn ? 'token_number' : 'id'
-      }%${Isasc ? 'desc' : 'asc'}`;
+      }%${Isasc ? 'desc' : 'asc'}&limit=${toAdd ? 0 : limit},${40}`;
     RequestAPI(query, 'GET', {}, true).then(({ data, status }) => {
       if (status === 200) {
-        this.setState({ data });
+        this.setState({
+          data: toAdd ? data : [...this.state.data, ...data],
+          isNext: data.length === 40
+        });
       }
     }).catch(err => {
       this.setState({ data: err });
@@ -162,6 +174,7 @@ class OnlineVotes extends React.Component {
                 />
               </tbody>
             </table>
+            {this.state.isNext ? <LoadingComponent /> : ''}
           </div>
         )}
       </div>
@@ -186,6 +199,8 @@ class OfflineVotes extends React.Component {
       tkn: false,
       asc: false,
       isFiltered: false,
+      isNext: true,
+      limit: 0
     };
     this.handleChange = this.handleChange.bind(this);
     this.handleSearchData = debounce(this.handleSearchData.bind(this), 300);
@@ -194,7 +209,14 @@ class OfflineVotes extends React.Component {
     this.handleToggleModal = this.handleToggleModal.bind(this);
   }
   componentDidMount() {
-    this.handleSearchData(this.state.searchQuery);
+    document.addEventListener('scroll', debounce(this.handleScroll.bind(this), 200))
+    this.handleSearchData(false);
+  }
+  handleScroll() {
+    const { isNext } = this.state;
+    if (isNext && window.innerHeight + document.documentElement.scrollTop > document.documentElement.offsetHeight / (1.5)) {
+      this.handleSearchData(false);
+    }
   }
   changeVoteCount(num) {
     const { count } = this.state;
@@ -215,15 +237,18 @@ class OfflineVotes extends React.Component {
     this.handleSearchData();
   }
 
-  handleSearchData() {
-    const { vote: Isvote, tkn: Istkn, asc: Isasc, searchQuery } = this.state;
+  handleSearchData(toAdd = true) {
+    const { vote: Isvote, tkn: Istkn, asc: Isasc, searchQuery, limit } = this.state;
     let queryParams = constructQuery(searchQuery);
-    const query = `http://localhost:3001/api/offline?word=${Isvote === null ? '' : Isvote ? 1 : 0
+    const query = `${APIS.HOST}api/offline?word=${Isvote === null ? '' : Isvote ? 1 : 0
       }%voted${queryParams.length ? `,${queryParams}` : ''}&sort=${Istkn ? 'token_number' : 'id'
-      }%${Isasc ? 'desc' : 'asc'}`;
+      }%${Isasc ? 'desc' : 'asc'}&limit=${toAdd ? 0 : limit},${40}`;
     RequestAPI(query, 'GET', {}, true).then(({ data, status }) => {
       if (status === 200) {
-        this.setState({ data });
+        this.setState({
+          data: toAdd ? data : [...this.state.data, ...data],
+          isNext: data.length === 40
+        });
       }
     }).catch(err => {
       this.setState({ data: err });
@@ -328,6 +353,7 @@ class OfflineVotes extends React.Component {
                 />
               </tbody>
             </table>
+            {this.state.isNext ? <LoadingComponent /> : ''}
           </div>
         )}
       </div>

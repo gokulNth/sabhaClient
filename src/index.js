@@ -11,7 +11,6 @@ import { ToastComp } from './Components/UtilComp';
 import { throttle } from './Utils/Constant';
 import { OfflineVotes, OnlineVotes } from './Components/VotingMode';
 import LoginForm from './Forms/LoginForm';
-import VoteCount from './Pages/VoteCount';
 
 class App extends React.Component {
   constructor() {
@@ -62,7 +61,6 @@ class App extends React.Component {
             element={<LoginForm showToastFn={this.showToastFn} />}
             path='/login'
           />
-          <Route exact element={<VoteCount />} path='/votecount' />
           <Route
             exact
             element={<ElectionPage showToastFn={this.showToastFn} />}

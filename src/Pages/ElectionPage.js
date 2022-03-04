@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { ElectionSubHeader } from '../Components/SubHeader';
 import { LoadingComponent } from '../Components/UtilComp';
-import { debounce, constructQuery, RequestAPI } from '../Utils/Constant';
+import { debounce, constructQuery, RequestAPI, APIS } from '../Utils/Constant';
 import {
   ElectionTableData,
   ElectionTableHead,
@@ -25,6 +25,8 @@ class ElectionPage extends Component {
       asc: false,
       tkn: false,
       isFiltered: false,
+      limit: 0,
+      isNext: false,
     };
     this.handleChange = this.handleChange.bind(this);
     this.handleSearchData = debounce(this.handleSearchData.bind(this), 300);
@@ -34,9 +36,17 @@ class ElectionPage extends Component {
     this.handleClearFilter = this.handleClearFilter.bind(this);
   }
 
+  handleScroll() {
+    const { isNext } = this.state;
+    if (isNext && window.innerHeight + document.documentElement.scrollTop > document.documentElement.offsetHeight / (1.5)) {
+      this.handleSearchData(false);
+    }
+  }
+
   componentDidMount() {
+    document.addEventListener('scroll', debounce(this.handleScroll.bind(this), 200))
     this.setState({ isLoading: true });
-    this.handleSearchData();
+    this.handleSearchData(false);
   }
   changeVoteCount(num) {
     const { count } = this.state;
@@ -57,16 +67,19 @@ class ElectionPage extends Component {
     this.handleSearchData();
   }
 
-  handleSearchData() {
-    this.setState({ isLoading: true });
-    const { vote: Isvote, tkn: Istkn, asc: Isasc, searchQuery } = this.state;
+  handleSearchData(toAdd = true) {
+    const { vote: Isvote, tkn: Istkn, asc: Isasc, searchQuery, limit } = this.state;
+    this.setState({ isLoading: true, limit: toAdd ? 0 : limit + 40 });
     let queryParams = constructQuery(searchQuery);
-    const query = `http://localhost:3001/api/searchall?word=${Isvote === null ? '' : Isvote ? 1 : 0
+    const query = `${APIS.HOST}api/searchall?word=${Isvote === null ? '' : Isvote ? 1 : 0
       }%voted${queryParams.length ? `,${queryParams}` : ''}&sort=${Istkn ? 'token_number' : 'id'
-      }%${Isasc ? 'desc' : 'asc'}`;
+      }%${Isasc ? 'desc' : 'asc'}&limit=${toAdd ? 0 : limit},${40}`;
     RequestAPI(query, 'GET', {}, true).then(({ data, status }) => {
       if (status === 200) {
-        this.setState({ data });
+        this.setState({
+          data: toAdd ? data : [...this.state.data, ...data],
+          isNext: data.length === 40
+        });
       }
     }).catch((error) => {
       this.setState({ data: error });
@@ -136,6 +149,7 @@ class ElectionPage extends Component {
                 />
               </tbody>
             </table>
+            {this.state.isNext ? <LoadingComponent /> : ''}
           </div>
         )}
       </div>

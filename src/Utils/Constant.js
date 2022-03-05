@@ -69,6 +69,13 @@ export function constructQuery(searchQuery) {
   return queryParams;
 }
 
+// 0 => R
+// 1 => RU their member data
+// 2 => RU all member data
+// 3 => RU their member data and R election data
+// 4 => RU their member data and RU election data
+// 5 => CRUD all data
+
 export function canNavigate(url) {
   let loginDetails = JSON.parse(window.localStorage.getItem('login') || window.sessionStorage.getItem('login'));
   if (url.includes('/api/member?')) return true;
@@ -76,16 +83,20 @@ export function canNavigate(url) {
     if (loginDetails.profile === 1) {
       if (url.includes(`/${loginDetails.id}`) || url.includes('/api/child/')) return true;
     } else if (loginDetails.profile === 2) {
-      if (url.includes('/searchall') || url.includes('/election') || url.includes('/online') || url.includes('/offline')) {
+      if (url.includes('/searchall') || url.includes('/election') || url.includes('/online') || url.includes('/offline') || url.includes(`/update/vote`)) {
         return false;
       } else {
         return true;
       }
     } else if (loginDetails.profile === 3) {
-      if (url.includes(`/update/vote`) || url.includes('/api/child/') || url.includes(`/${loginDetails.id}`) || url.includes('/searchall') || url.includes('/election') || url.includes('/online') || url.includes('/offline')) {
+      if (url.includes('/api/child/') || url.includes(`/${loginDetails.id}`) || url.includes('/searchall') || url.includes('/election') || url.includes('/online') || url.includes('/offline')) {
         return true;
       }
     } else if (loginDetails.profile === 4) {
+      if (url.includes(`/update/vote`) || url.includes('/api/child/') || url.includes(`/${loginDetails.id}`) || url.includes('/searchall') || url.includes('/election') || url.includes('/online') || url.includes('/offline')) {
+        return true;
+      }
+    } else if (loginDetails.profile === 5) {
       return true;
     }
   }

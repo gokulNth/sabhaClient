@@ -26,7 +26,7 @@ function SubHeader(props) {
             </li>
             {login
               ? <>
-                <div class="divider text-center" data-content="Account"></div>
+                <div className="divider text-center" data-content="Account"></div>
                 <li className='btn btn-link' onClick={props.handleLogout}>Logout</li>
                 <li className='btn btn-link'>Change Password</li>
               </>
@@ -55,11 +55,11 @@ function SubHeader(props) {
       <section className='navbar-section hide-sm'>
         {login
           ? <div className="dropdown">
-            <a href="#" className="btn btn-link dropdown-toggle" tabIndex="0">
+            <div className="btn btn-link dropdown-toggle" tabIndex="0">
               <span className="text-mute text-dark">HI!</span>
               &nbsp;&nbsp;
               {login.member_name} <i className="icon icon-caret"></i>
-            </a>
+            </div>
             <ul className="menu">
               <li className='btn btn-link' onClick={props.handleLogout}>Logout</li>
               <li className='btn btn-link'>Change Password</li>

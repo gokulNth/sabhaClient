@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { caculateAge, canNavigate, GenericWords, RequestAPI, APIS } from '../Utils/Constant';
 import { TextBox } from './UtilComp';
+import useBrowserContextCommunication from '../Utils/PostMessage'
 
 function ElectionTableHead(props) {
   const { searchQuery, handleChange } = props;
@@ -73,10 +74,20 @@ function ElectionTableData(props) {
     changeVoteCount,
   } = props;
   const [data, setData] = useState([]);
+  const [messages] = useBrowserContextCommunication("electionPage");
   useEffect(() => {
-    setData(dataMem);
-  }, [dataMem]);
-  return data.map((singleData, index) => (
+    setData(dataMem.map(data => {
+      let tempData = data;
+      messages.messages.filter(msgData => {
+        if (msgData && parseInt(msgData.id) === data.id) {
+          tempData = { ...data, ...msgData };
+        }
+      })
+      return tempData;
+    }));
+  }, [dataMem, messages.messages]);
+
+  return (data).map((singleData, index) => (
     <tr key={index}>
       <td className='text-center'>{singleData.id}</td>
       <ElectionBody
@@ -97,6 +108,7 @@ function ElectionBody(props) {
   useEffect(() => {
     setSingleData(data);
   }, [data]);
+  const [, postMessage] = useBrowserContextCommunication("electionPage");
   const handleVote = (id, voted) => {
     const { changeVoteCount, showToastFn } = props;
     let [mode, mid] = (id || '').split('_');
@@ -110,6 +122,7 @@ function ElectionBody(props) {
         true
       ).then((response) => {
         if (response.status === 200) {
+          postMessage({ ...response.data, id: parseInt(mid) })
           setSingleData({
             ...data,
             ...response.data,
